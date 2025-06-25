@@ -4,7 +4,7 @@ import "time"
 
 type Workout struct {
 	ID        int           `json:"id" db:"id"`
-	Name      string        `json:"name" db:"name"`
+	Name      string        `json:"name" db:"workout_name"`
 	Exercises []ExerciseLog `json:"exercises" db:"exercises"`
 	CreatedAt time.Time     `json:"created_at" db:"created_at"`
 }

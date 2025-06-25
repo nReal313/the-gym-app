@@ -23,6 +23,28 @@ func NewDatabaseService() (*DatabaseService, error) {
 	return &DatabaseService{db: db}, nil
 }
 
+func dropTable(s *sql.DB, tableName string) error {
+	if _, err := s.Exec("DROP TABLE IF EXISTS " + tableName); err != nil {
+		return err
+	}
+	return nil
+}
+
+func cleanupDatabase(db *sql.DB, tables []string) error {
+	for i := 0; i <= len(tables)-1; i++ {
+		if err := dropTable(db, tables[i]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (dbService *DatabaseService) Cleanup() error {
+	//find a way to list the tables in decreasing order of dependencies
+	tables := []string{"sets", "exercises", "workouts"}
+	return cleanupDatabase(dbService.db, tables)
+}
+
 func createTables(db *sql.DB) error {
 	//create workoutlog table
 	_, err := db.Exec(
@@ -42,7 +64,7 @@ func createTables(db *sql.DB) error {
 		id INTEGER PRIMARY KEY AUTOINCREMENT, 
 		exercise TEXT NOT NULL,
 		workout_id INTEGER NOT NULL,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (workout_id) REFERENCES workouts (id)
 		)
 	`)
@@ -145,11 +167,9 @@ func (s *DatabaseService) GetWorkouts() ([]models.Workout, error) {
 				if err != nil {
 					return nil, err
 				}
-
 				exerciseLog.Sets = append(exerciseLog.Sets, set)
 			}
 			setRows.Close()
-
 			workout.Exercises = append(workout.Exercises, exerciseLog)
 		}
 		exerciseRows.Close()

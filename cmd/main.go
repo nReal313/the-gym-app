@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,10 +10,25 @@ import (
 )
 
 func main() {
+	//capturing flag for db cleanup
+	var cleanup bool
+	flag.BoolVar(&cleanup, "cleanup", false, "Delete db structure and data")
+
+	flag.Parse()
+
 	//Initialise database
 	dbService, err := services.NewDatabaseService()
 	if err != nil {
 		log.Fatal("Failed to initialize database: ", err)
+	}
+
+	//database cleanup
+	if cleanup {
+		log.Println("Cleaning up database...")
+		if err := dbService.Cleanup(); err != nil {
+			log.Fatal("Failed to cleanup database : ", err)
+			return
+		}
 	}
 
 	//Initialise handlers

@@ -21,7 +21,7 @@ func (h *WorkoutHandler) LogWorkout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var workout models.WorkoutLog
+	var workout models.Workout
 	if err := json.NewDecoder(r.Body).Decode(&workout); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
