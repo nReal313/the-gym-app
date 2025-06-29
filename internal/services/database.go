@@ -2,6 +2,7 @@ package services
 
 import (
 	"database/sql"
+	"log"
 	"the-gym-app/internal/models"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -46,8 +47,26 @@ func (dbService *DatabaseService) Cleanup() error {
 }
 
 func createTables(db *sql.DB) error {
-	//create workoutlog table
+	//create users table
 	_, err := db.Exec(
+		`CREATE TABLE IF NOT EXISTS users (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			username TEXT NOT NULL,
+			email TEXT NOT NULL,
+			password_hash TEXT NOT NULL,
+			roles TEXT NOT NULL,
+			fitness_goal TEXT NOT NULL,
+			experience_level TEXT NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)
+	`)
+	if err != nil {
+		return err
+	}
+
+	//create workoutlog table
+	_, err = db.Exec(
 		`CREATE TABLE IF NOT EXISTS workouts (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			workout_name TEXT NOT NULL, 
@@ -58,7 +77,7 @@ func createTables(db *sql.DB) error {
 		return err
 	}
 
-	//create  table
+	//create exercises table
 	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS exercises (
 		id INTEGER PRIMARY KEY AUTOINCREMENT, 
@@ -87,6 +106,40 @@ func createTables(db *sql.DB) error {
 	return err
 }
 
+func (s *DatabaseService) checkIfUserExists(username string) (bool, error) {
+	var count int
+	err := s.db.QueryRow("SELECT COUNT(*) FROM users WHERE username = ?", username).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (s *DatabaseService) SaveUser(user *models.User) error {
+	//check if the username already exists
+	exists, err := s.checkIfUserExists(user.Username)
+	if err != nil {
+		return err
+	}
+	if exists {
+		log.Fatal("username already exists, choose something else")
+		return nil
+	}
+	//if not then create the user
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.Exec("INSERT INTO users (username, email, password_hash, roles, fitness_goal, experience_level) VALUES (?, ?, ?, ?, ?, ?)", user.Username, user.Email, user.PasswordHash, user.Role, user.FitnessGoal, user.ExperienceLevel)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
 func (s *DatabaseService) SaveWorkout(workout *models.Workout) error {
 	//Start a transaction
 	tx, err := s.db.Begin()
@@ -94,6 +147,8 @@ func (s *DatabaseService) SaveWorkout(workout *models.Workout) error {
 		return err
 	}
 	defer tx.Rollback()
+
+	//fetch user id from context to create a mapping between the workout and the user
 
 	result, err := tx.Exec("INSERT INTO workouts (workout_name) VALUES (?)", workout.Name)
 	if err != nil {

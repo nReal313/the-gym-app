@@ -7,6 +7,7 @@ type Workout struct {
 	Name      string        `json:"name" db:"workout_name"`
 	Exercises []ExerciseLog `json:"exercises" db:"exercises"`
 	CreatedAt time.Time     `json:"created_at" db:"created_at"`
+	UserID    int           `json:"user_id" db:"user_id"`
 }
 
 type ExerciseLog struct {
