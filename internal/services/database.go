@@ -71,6 +71,8 @@ func createTables(db *sql.DB) error {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			workout_name TEXT NOT NULL, 
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+			user_id INTEGER NOT NULL,
+			FOREIGN KEY (user_id) REFERENCES users (id)
 		)
 	`)
 	if err != nil {
@@ -122,8 +124,7 @@ func (s *DatabaseService) SaveUser(user *models.User) error {
 		return err
 	}
 	if exists {
-		log.Fatal("username already exists, choose something else")
-		return nil
+		return err
 	}
 	//if not then create the user
 	tx, err := s.db.Begin()
