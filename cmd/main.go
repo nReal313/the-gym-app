@@ -33,6 +33,9 @@ func main() {
 
 	//Initialise handlers
 	workoutHandler := handlers.NewWorkoutHandler(dbService)
+	loginHandler := handlers.NewLoginHandler(dbService)
+
+	http.HandleFunc("/login", loginHandler.Login)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Welcome to The Gym App")
