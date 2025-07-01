@@ -2,7 +2,6 @@ package services
 
 import (
 	"database/sql"
-	"log"
 	"the-gym-app/internal/models"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -108,7 +107,7 @@ func createTables(db *sql.DB) error {
 	return err
 }
 
-func (s *DatabaseService) checkIfUserExists(username string) (bool, error) {
+func (s *DatabaseService) CheckIfUserExists(username string) (bool, error) {
 	var count int
 	err := s.db.QueryRow("SELECT COUNT(*) FROM users WHERE username = ?", username).Scan(&count)
 	if err != nil {
@@ -117,9 +116,18 @@ func (s *DatabaseService) checkIfUserExists(username string) (bool, error) {
 	return count > 0, nil
 }
 
+func (s *DatabaseService) CheckIfUserPasswordCorrect(username string, password string) (bool, error) {
+	var savedPassword string
+	err := s.db.QueryRow("SELECT password FROM users WHERE username = ?", username).Scan(&savedPassword)
+	if err != nil {
+		return false, err
+	}
+	return savedPassword == password, nil
+}
+
 func (s *DatabaseService) SaveUser(user *models.User) error {
 	//check if the username already exists
-	exists, err := s.checkIfUserExists(user.Username)
+	exists, err := s.CheckIfUserExists(user.Username)
 	if err != nil {
 		return err
 	}
