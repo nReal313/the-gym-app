@@ -39,21 +39,22 @@ func (l *LoginHandler) Login(w http.ResponseWriter, r *http.Request) {
 	//validate the user credentials
 	exists, err := l.db.CheckIfUserExists(credentials.Username)
 	if err != nil {
-		http.Error(w, "Server is facing problems at the moment", http.StatusInternalServerError)
+		http.Error(w, "Server is facing problems at the moment, could not validate credentials", http.StatusInternalServerError)
 		return
 	}
 	if exists {
 		//verify password
 		verified, err := l.db.CheckIfUserPasswordCorrect(credentials.Username, credentials.Password)
 		if err != nil {
-			http.Error(w, "Server is facing problems at the moment", http.StatusInternalServerError)
+			http.Error(w, "Server is facing problems at the moment, could not verify password", http.StatusInternalServerError)
 			return
 		}
 		if verified {
 			//generate jwt token for the user
 			jwtToken, err := middleware.GenerateToken(credentials.Username)
 			if err != nil {
-				http.Error(w, "Server is facing problems at the moment", http.StatusInternalServerError)
+				log.Printf("error : %v", err)
+				http.Error(w, "Server is facing problems at the moment, could not generate token", http.StatusInternalServerError)
 				return
 			}
 			response := map[string]string{
