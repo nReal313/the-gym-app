@@ -69,7 +69,7 @@ func createTables(db *sql.DB) error {
 		`CREATE TABLE IF NOT EXISTS workouts (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			workout_name TEXT NOT NULL, 
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			user_id INTEGER NOT NULL,
 			FOREIGN KEY (user_id) REFERENCES users (id)
 		)
@@ -118,7 +118,7 @@ func (s *DatabaseService) CheckIfUserExists(username string) (bool, error) {
 
 func (s *DatabaseService) CheckIfUserPasswordCorrect(username string, password string) (bool, error) {
 	var savedPassword string
-	err := s.db.QueryRow("SELECT password FROM users WHERE username = ?", username).Scan(&savedPassword)
+	err := s.db.QueryRow("SELECT password_hash FROM users WHERE username = ?", username).Scan(&savedPassword)
 	if err != nil {
 		return false, err
 	}

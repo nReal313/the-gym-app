@@ -12,12 +12,14 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type contextKey string
+
 func MiddlewareHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Get secret key from environment variable
-		secret := os.Getenv("JWT_SECRET")
+		secret := os.Getenv("GYM_APP_SECRET_KEY")
 		if secret == "" {
-			log.Fatal("JWT_SECRET environment variable not set")
+			log.Fatal("GYM_APP_SECRET_KEY environment variable not set")
 		}
 
 		//logic for jwt extraction from authorization header and parsing and verification
@@ -29,6 +31,7 @@ func MiddlewareHandler(next http.Handler) http.Handler {
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				http.Error(w, "Unexpected signing method", http.StatusNotAcceptable)
 				return nil, fmt.Errorf("unexpected signing method")
 			}
 			return []byte(secret), nil // Use environment variable instead of hardcoded string
@@ -38,7 +41,7 @@ func MiddlewareHandler(next http.Handler) http.Handler {
 			return
 		}
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			ctx := context.WithValue(r.Context(), []byte("user"), claims)
+			ctx := context.WithValue(r.Context(), contextKey("user"), claims)
 			r = r.WithContext(ctx)
 		}
 		next.ServeHTTP(w, r)
@@ -46,7 +49,7 @@ func MiddlewareHandler(next http.Handler) http.Handler {
 }
 
 func GenerateToken(username string) (string, error) {
-	secret := os.Getenv("JWT_SECRET")
+	secret := os.Getenv("GYM_APP_SECRET_KEY")
 	if secret == "" {
 		return "", fmt.Errorf("invalid_secret")
 	}
