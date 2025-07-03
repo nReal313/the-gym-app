@@ -8,6 +8,8 @@ import (
 	"the-gym-app/internal/middleware"
 	"the-gym-app/internal/models"
 	"the-gym-app/internal/services"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Credentials struct {
@@ -44,12 +46,13 @@ func (l *LoginHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	if exists {
 		//verify password
-		verified, err := l.db.CheckIfUserPasswordCorrect(credentials.Username, credentials.Password)
+		storedPass, err := l.db.FetchPassword(credentials.Username)
 		if err != nil {
 			http.Error(w, "Server is facing problems at the moment, could not verify password", http.StatusInternalServerError)
 			return
 		}
-		if verified {
+		passwordErr := bcrypt.CompareHashAndPassword([]byte(storedPass), []byte(credentials.Password))
+		if passwordErr == nil {
 			//generate jwt token for the user
 			jwtToken, err := middleware.GenerateToken(credentials.Username)
 			if err != nil {
@@ -62,6 +65,8 @@ func (l *LoginHandler) Login(w http.ResponseWriter, r *http.Request) {
 			}
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(response)
+		} else {
+			http.Error(w, "Passwords do not match", http.StatusUnauthorized)
 		}
 	} else {
 		http.Error(w, "User does not exist. Please sign up", http.StatusUnauthorized)
@@ -77,9 +82,15 @@ func (l *LoginHandler) Signup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Problem creating new user, please check in again later", http.StatusInternalServerError)
 		return
 	}
+	//hashing password using bcrypt
+	hashP, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, "Problem securing password, please check in again later", http.StatusInternalServerError)
+		return
+	}
 	var newUserToDb models.User
 	newUserToDb.Username = newUser.Username
-	newUserToDb.PasswordHash = newUser.Password
+	newUserToDb.PasswordHash = string(hashP)
 	newUserToDb.Email = newUser.Email
 	if err := l.db.SaveUser(&newUserToDb); err != nil {
 		http.Error(w, "Problem saving new user, please check in again later", http.StatusInternalServerError)

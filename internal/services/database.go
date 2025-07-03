@@ -116,13 +116,13 @@ func (s *DatabaseService) CheckIfUserExists(username string) (bool, error) {
 	return count > 0, nil
 }
 
-func (s *DatabaseService) CheckIfUserPasswordCorrect(username string, password string) (bool, error) {
+func (s *DatabaseService) FetchPassword(username string) (string, error) {
 	var savedPassword string
 	err := s.db.QueryRow("SELECT password_hash FROM users WHERE username = ?", username).Scan(&savedPassword)
 	if err != nil {
-		return false, err
+		return "", err
 	}
-	return savedPassword == password, nil
+	return savedPassword, err
 }
 
 func (s *DatabaseService) SaveUser(user *models.User) error {
