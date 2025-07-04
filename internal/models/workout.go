@@ -26,3 +26,9 @@ type Set struct {
 	RPE        float64 `json:"rpe"`
 	SetNumber  int     `json:"set_number" db:"set_number"`
 }
+
+type SetRep struct {
+	ExerciseName string  `json:"exercise_name"`
+	Reps         int     `json:"reps"`
+	Weight       float64 `json:"weight"`
+}
