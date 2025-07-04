@@ -245,6 +245,24 @@ func (s *DatabaseService) GetWorkouts() ([]models.Workout, error) {
 	return totalLogs, nil
 }
 
-// func (s *DatabaseService) GetWorkout(date time.Time) (models.WorkoutLog, error) {
-// 	rows, err := s.db.Query("SELECT id, exercise, created_at FROM ")
-// }
+func (s *DatabaseService) GetSetRep(userId int, exercise string, reps int) (models.SetRep, error) {
+	var setRep models.SetRep
+	row, err := s.db.Query(`
+		SELECT max(weight) FROM sets s
+		JOIN exercises e on s.exercise_id = e.id
+		JOIN workouts w on e.workout_id = w.id
+		JOIN users u on w.user_id = ?
+		WHERE s.reps = ?
+		AND e.exercise = ?	
+	`, userId, reps, exercise)
+	if err != nil {
+		return setRep, err
+	}
+	defer row.Close()
+	var maxWeight float64
+	err = row.Scan(&maxWeight)
+
+	//more logic
+
+	return setRep, nil
+}
