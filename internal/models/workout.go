@@ -25,6 +25,7 @@ type Set struct {
 	Weight     float64 `json:"weight"`
 	RPE        float64 `json:"rpe"`
 	SetNumber  int     `json:"set_number" db:"set_number"`
+	// TODO : add remarks field here and make it optional
 }
 
 type SetRep struct {
