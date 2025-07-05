@@ -44,9 +44,14 @@ func main() {
 		fmt.Fprintf(w, "Welcome to The Gym App")
 	})
 
+	//endpoint to log workouts
 	http.Handle("/api/workouts", middleware.MiddlewareHandler(http.HandlerFunc(workoutHandler.LogWorkout)))
 
+	//endpoint to find a user's entire history of workouts
 	http.Handle("/api/workouts/findAll", middleware.MiddlewareHandler(http.HandlerFunc(workoutHandler.GetAllWorkouts)))
+
+	//endpoint to find user's set rep maxes
+	http.Handle("/api/workouts/setRep", middleware.MiddlewareHandler(http.HandlerFunc(workoutHandler.GetSetRepMax)))
 
 	fmt.Println("Server starting on :8080...")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
