@@ -2,6 +2,7 @@ package services
 
 import (
 	"database/sql"
+	"fmt"
 	"the-gym-app/internal/models"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -251,8 +252,9 @@ func (s *DatabaseService) GetSetRep(userId int, exercise string, reps int) (mode
 		SELECT max(weight) FROM sets s
 		JOIN exercises e on s.exercise_id = e.id
 		JOIN workouts w on e.workout_id = w.id
-		JOIN users u on w.user_id = ?
-		WHERE s.reps = ?
+		JOIN users u on w.user_id = u.id
+		WHERE u.id = ? 
+		AND s.reps = ?
 		AND e.exercise = ?	
 	`, userId, reps, exercise)
 	if err != nil {
@@ -261,8 +263,23 @@ func (s *DatabaseService) GetSetRep(userId int, exercise string, reps int) (mode
 	defer row.Close()
 	var maxWeight float64
 	err = row.Scan(&maxWeight)
+	if err != nil {
+		return setRep, err
+	}
 
-	//more logic
+	//more logic to map to vo
 
 	return setRep, nil
+}
+
+func (s *DatabaseService) GetUserIdFromUsername(username string) (int, error) {
+	var userId int
+	err := s.db.QueryRow("SELECT id FROM users WHERE username = ?", username).Scan(&userId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return 0, fmt.Errorf("user not found: %s", username)
+		}
+		return 0, err
+	}
+	return userId, nil
 }
