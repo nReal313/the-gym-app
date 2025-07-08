@@ -105,6 +105,19 @@ func createTables(db *sql.DB) error {
 	)
 	`)
 
+	_, err = db.Exec(`
+	CREATE TABLE IF NOT EXISTS user_profiles(
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		height INTEGER NOT NULL,
+		weight INTEGER NOT NULL,
+		bodyfat REAL,
+		target_weight INTEGER,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	)
+	`)
+
 	return err
 }
 
@@ -283,3 +296,5 @@ func (s *DatabaseService) GetUserIdFromUsername(username string) (int, error) {
 	}
 	return userId, nil
 }
+
+// func (s *DatabaseService) GetUserProfileFromUsername(username string)
