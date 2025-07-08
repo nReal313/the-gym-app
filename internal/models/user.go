@@ -15,3 +15,11 @@ type User struct {
 
 	Workouts []Workout `json:"workouts,omitempty"`
 }
+
+type UserProfile struct {
+	ID           int     `json:"id" db:"id"`
+	Height       int     `json:"height" db:"height"`
+	Weight       int     `json:"weight" db:"weight"`
+	Bodyfat      float64 `json:"bodyfat,omitempty" db:"bodyfat"`
+	TargetWeight int     `json:"target_weight,omitempty" db:"target_weight"`
+}
